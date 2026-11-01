@@ -1,0 +1,78 @@
+{
+  "notes": "Thresholds used to build the Boraginaceae alignment subsets that were taken into Geneious. Paths are placeholders. Copy example/config.json and replace the paths, or edit this file. Homolog BLAST cutoffs were inspected and were not applied.",
+  "output_dir": "REPLACE_WITH_OUTPUT_DIR",
+  "alignment_suffix": ".mafft.added.reference.align.fna",
+  "reference_row": "last",
+  "header_fixes": [
+    ["Echitum_plantagineum", "Echium_plantagineum"],
+    ["echitum_plantagineum", "echium_plantagineum"]
+  ],
+  "transcriptome_qc": {
+    "enabled": true,
+    "fasta_dir": "REPLACE_WITH_TRINITY_FASTA_DIR"
+  },
+  "busco_summary": {
+    "enabled": true,
+    "busco_root": "REPLACE_WITH_BUSCO_RUN_DIR"
+  },
+  "longest_isoform": {
+    "enabled": true,
+    "fasta_dir": "REPLACE_WITH_TRINITY_FASTA_DIR"
+  },
+  "species_map": {
+    "enabled": true,
+    "transcriptome_list": "REPLACE_WITH_TRANSCRIPTOME_LIST"
+  },
+  "reference_cds_check": {
+    "enabled": true,
+    "masked_cds_fasta": "REPLACE_WITH_INTRON_MASKED_CDS",
+    "spliced_cds_fasta": "REPLACE_WITH_SPLICED_CDS",
+    "alignment_dir": "REPLACE_WITH_ATHALIANA_ALIGNMENT_DIR"
+  },
+  "gff_metrics": {
+    "enabled": true,
+    "gff": "REPLACE_WITH_GFF",
+    "alignment_dir": "REPLACE_WITH_ATHALIANA_ALIGNMENT_DIR"
+  },
+  "exon_qc": {
+    "enabled": true,
+    "runs": [
+      {"name": "athaliana", "alignment_dir": "REPLACE_WITH_ATHALIANA_ALIGNMENT_DIR"},
+      {"name": "athaliana_longest_isoform", "alignment_dir": "REPLACE_WITH_ATHALIANA_LONGEST_ALIGNMENT_DIR"},
+      {"name": "vitis", "alignment_dir": "REPLACE_WITH_VITIS_ALIGNMENT_DIR"},
+      {"name": "vitis_longest_isoform", "alignment_dir": "REPLACE_WITH_VITIS_LONGEST_ALIGNMENT_DIR"}
+    ]
+  },
+  "msa_metrics": {
+    "enabled": true,
+    "runs": [
+      {"name": "athaliana", "alignment_dir": "REPLACE_WITH_ATHALIANA_ALIGNMENT_DIR"},
+      {"name": "athaliana_longest_isoform", "alignment_dir": "REPLACE_WITH_ATHALIANA_LONGEST_ALIGNMENT_DIR"},
+      {"name": "vitis", "alignment_dir": "REPLACE_WITH_VITIS_ALIGNMENT_DIR"},
+      {"name": "vitis_longest_isoform", "alignment_dir": "REPLACE_WITH_VITIS_LONGEST_ALIGNMENT_DIR"}
+    ]
+  },
+  "compare_gff_msa": {
+    "enabled": true
+  },
+  "filter": {
+    "enabled": true,
+    "runs": [
+      "athaliana",
+      "athaliana_longest_isoform",
+      "vitis",
+      "vitis_longest_isoform"
+    ],
+    "thresholds": {
+      "n_exons_gt": 0,
+      "n_introns_lt": 5,
+      "max_exon_bp_gt": 220,
+      "max_intron_bp_lt": 121,
+      "avg_exon_bp_gt": 152.51259,
+      "avg_intron_bp_lt": 102.46
+    }
+  },
+  "report": {
+    "enabled": true
+  }
+}

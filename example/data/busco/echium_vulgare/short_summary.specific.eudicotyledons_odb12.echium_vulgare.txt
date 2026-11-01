@@ -1,0 +1,13 @@
+# BUSCO version is: 5
+# Summarized benchmarking in BUSCO notation for file echium_vulgare.Trinity.fasta
+# BUSCO was run in mode: transcriptome
+# The lineage dataset is: eudicotyledons_odb12
+
+***** Results: *****
+
+	C:41.4%[S:25.9%,D:15.5%],F:15.9%,M:42.7%,n:2805
+	1160	Complete BUSCOs (C)
+	726	Complete and single-copy BUSCOs (S)
+	434	Complete and duplicated BUSCOs (D)
+	446	Fragmented BUSCOs (F)
+	1199	Missing BUSCOs (M)

@@ -1,0 +1,68 @@
+{
+  "output_dir": "output",
+  "alignment_suffix": ".mafft.added.reference.align.fna",
+  "reference_row": "last",
+  "header_fixes": [
+    ["Echitum_plantagineum", "Echium_plantagineum"],
+    ["echitum_plantagineum", "echium_plantagineum"]
+  ],
+  "transcriptome_qc": {
+    "enabled": true,
+    "fasta_dir": "data/transcriptomes"
+  },
+  "busco_summary": {
+    "enabled": true,
+    "busco_root": "data/busco"
+  },
+  "longest_isoform": {
+    "enabled": true,
+    "fasta_dir": "data/transcriptomes"
+  },
+  "species_map": {
+    "enabled": true,
+    "transcriptome_list": "data/transcriptome_list.txt"
+  },
+  "reference_cds_check": {
+    "enabled": true,
+    "masked_cds_fasta": "data/reference/intron_masked_cds.fa",
+    "spliced_cds_fasta": "data/reference/spliced_cds.fa",
+    "alignment_dir": "data/alignments/athaliana"
+  },
+  "gff_metrics": {
+    "enabled": true,
+    "gff": "data/reference/genes.gff",
+    "alignment_dir": "data/alignments/athaliana"
+  },
+  "exon_qc": {
+    "enabled": true,
+    "runs": [
+      {"name": "athaliana", "alignment_dir": "data/alignments/athaliana"},
+      {"name": "vitis", "alignment_dir": "data/alignments/vitis"}
+    ]
+  },
+  "msa_metrics": {
+    "enabled": true,
+    "runs": [
+      {"name": "athaliana", "alignment_dir": "data/alignments/athaliana"},
+      {"name": "vitis", "alignment_dir": "data/alignments/vitis"}
+    ]
+  },
+  "compare_gff_msa": {
+    "enabled": true
+  },
+  "filter": {
+    "enabled": true,
+    "runs": ["athaliana", "vitis"],
+    "thresholds": {
+      "n_exons_gt": 0,
+      "n_introns_lt": 5,
+      "max_exon_bp_gt": 220,
+      "max_intron_bp_lt": 121,
+      "avg_exon_bp_gt": 152.51259,
+      "avg_intron_bp_lt": 102.46
+    }
+  },
+  "report": {
+    "enabled": true
+  }
+}

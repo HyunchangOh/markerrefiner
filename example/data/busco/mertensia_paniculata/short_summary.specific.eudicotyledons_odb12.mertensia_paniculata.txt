@@ -1,0 +1,13 @@
+# BUSCO version is: 5
+# Summarized benchmarking in BUSCO notation for file mertensia_paniculata.Trinity.fasta
+# BUSCO was run in mode: transcriptome
+# The lineage dataset is: eudicotyledons_odb12
+
+***** Results: *****
+
+	C:39.4%[S:14.1%,D:25.2%],F:22.2%,M:38.5%,n:2805
+	1104	Complete BUSCOs (C)
+	396	Complete and single-copy BUSCOs (S)
+	708	Complete and duplicated BUSCOs (D)
+	622	Fragmented BUSCOs (F)
+	1079	Missing BUSCOs (M)

@@ -1,0 +1,11 @@
+transcriptomes/DAT1-anchusa_capensis.fasta
+transcriptomes/DAT2-anchusa_officinalis.fasta
+transcriptomes/DAT3-arnebia_euchroma.fasta
+transcriptomes/DAT4-buglossoides_arvensis.fasta
+transcriptomes/DAT5-echitum_plantagineum.fasta
+transcriptomes/DAT6-echium_leucophaeum.fasta
+transcriptomes/DAT7-echium_vulgare.fasta
+transcriptomes/DAT8-lithospermum_erythrorhizon.fasta
+transcriptomes/DAT9-mertensia_paniculata.fasta
+transcriptomes/DATA-myosotis_sylvatica.fasta
+transcriptomes/DATB-symphytum_oficinale.fasta

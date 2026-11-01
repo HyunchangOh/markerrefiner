@@ -1,0 +1,13 @@
+# BUSCO version is: 5
+# Summarized benchmarking in BUSCO notation for file lithospermum_erythrorhizon.Trinity.fasta
+# BUSCO was run in mode: transcriptome
+# The lineage dataset is: eudicotyledons_odb12
+
+***** Results: *****
+
+	C:94.7%[S:6.6%,D:88.1%],F:2.7%,M:2.6%,n:2805
+	2655	Complete BUSCOs (C)
+	184	Complete and single-copy BUSCOs (S)
+	2471	Complete and duplicated BUSCOs (D)
+	77	Fragmented BUSCOs (F)
+	73	Missing BUSCOs (M)

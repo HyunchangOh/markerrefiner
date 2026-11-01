@@ -1,0 +1,27 @@
+Example data are unmodified excerpts from the Boraginaceae MarkerMiner
+project. They are small enough to rerun the pipeline; they are not the full
+analysis.
+
+Alignments
+  athaliana/  AT1G01180, AT1G01280, AT1G01880
+              MarkerMiner with the Arabidopsis reference, file
+              MAFFT_ADD_REF_ALIGN_FASTA.
+  vitis/      VV00G01720
+              MarkerMiner with the Vitis reference.
+
+Reference
+  intron_masked_cds.fa   those three loci from MarkerMiner's
+                         Athaliana ath_CDS_IntronMasked.fa
+  spliced_cds.fa         the same loci from the TAIR10 representative CDS
+  genes.gff              CDS lines for those loci from TAIR10_GFF3_genes.gff
+
+Transcriptomes
+  First FASTA record from each Trinity assembly, named with the DAT code
+  used in the alignments. DAT5 keeps the filename spelling
+  echitum_plantagineum. DAT7 also includes three isoforms of
+  TRINITY_DN22758_c0_g1 so the longest-isoform step has something to do.
+
+BUSCO
+  Short summaries for three real transcriptome runs against
+  eudicotyledons_odb12: Echium vulgare, Mertensia paniculata, and
+  Lithospermum erythrorhizon. Only the summary lines are included.
