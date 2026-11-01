@@ -6,6 +6,68 @@ MarkerMiner is not included. Run it first (Chamala et al., Applications in Plant
 
 Every path, cutoff, and header correction is set in a JSON config file. The program does not have a second set of hidden defaults for those choices.
 
+## How to run
+
+Python 3.8 or newer. Nothing to install. Commands below are run from the repository directory, so `python3 -m mmprefilter` finds the package. BUSCO and Trinity are needed only if you still have to produce the assemblies, the BUSCO runs, or the MarkerMiner alignments. This program reads those outputs.
+
+```bash
+git clone https://github.com/HyunchangOh/markerrefiner.git
+cd markerrefiner
+python3 -m mmprefilter run --config example/config.json
+```
+
+That scores the example alignments and writes `example/output/`. Open `example/output/report.html` in a browser.
+
+### Choose the cutoffs
+
+The page is built from the tables that command just wrote. Six sliders set the cutoffs. Counts update as you move them. When the locus count is the set you want to open in Geneious, click **Download thresholds.json**.
+
+Point the config at the file you saved. Paths are relative to the config file.
+
+```json
+"filter": {
+  "enabled": true,
+  "thresholds_file": "thresholds.json"
+}
+```
+
+If `filter.thresholds` is also present, the file is what the filter uses.
+
+Apply that choice without scoring the alignments again:
+
+```bash
+python3 -m mmprefilter run --config example/config.json --from filter
+```
+
+Kept alignments are in `example/output/filtered/<run>/`. `namelist.txt` in that folder is the locus list to import into Geneious.
+
+The example config already contains the Boraginaceae cutoffs, so the first command also filters. It keeps `AT1G01180` and `AT1G01280`, and drops `AT1G01880` (6 introns) and `VV00G01720` (8 introns, longest exon 131 bp).
+
+### Run your own MarkerMiner alignments
+
+1. Copy `example/config.json` to a new file, for example `my.json`.
+2. Under `msa_metrics.runs`, set one entry per MarkerMiner run. `alignment_dir` is that run's `MAFFT_ADD_REF_ALIGN_FASTA` directory. `name` is the label used in the output filenames.
+3. Set `output_dir` to where you want the tables and the filtered FASTA files.
+4. Set `"enabled": false` on every stage you do not have inputs for. Scoring, the slider page, and the filter need only the alignment directories. The CDS check and the GFF stage need a reference annotation. The transcriptome, BUSCO, and longest-isoform stages need the assemblies from before MarkerMiner.
+5. Delete `filter.thresholds` if you want to choose cutoffs after seeing your own distributions. The first run then writes the slider page and does not drop loci yet.
+6. Run it:
+
+```bash
+python3 -m mmprefilter run --config my.json
+```
+
+7. Open `<output_dir>/report.html`, download `thresholds.json`, set `filter.thresholds_file` to that path, and rerun from the filter:
+
+```bash
+python3 -m mmprefilter run --config my.json --from filter
+```
+
+`--from` and `--to` choose which stages to execute. Analysis settings stay in the config.
+
+Species names in the filtered headers come from `species_map.transcriptome_list`: one assembly path per line. The filename must look like `DAT8-lithospermum_erythrorhizon.fasta`.
+
+`config.study.json` is the four runs from this project (Arabidopsis or Vitis reference, all isoforms or longest isoform), with the paths left blank. Those cutoffs kept 606, 540, 409, and 369 loci.
+
 ## Workflow
 
 MarkerMiner returns a locus for every reference gene it can find. Most of those loci are a poor use of manual time in Geneious. The usual reason to throw one out, once it is open, is that the gene is the wrong shape for a marker: no exon long enough to use, too many intron breaks, or a long empty stretch, or that the ingroup sequence is barely there. This program measures those problems first and writes only the loci that pass.
@@ -114,60 +176,6 @@ The first three stages look at the assemblies, before MarkerMiner. A broken asse
 
 Steps 4 and 5 need an external annotation, so they apply to an Arabidopsis-reference MarkerMiner run. Steps 6, 7, 9, and 10 apply to every run listed in the config, including a Vitis reference.
 
-## Requirements
-
-Python 3.8 or newer. No packages to install.
-
-BUSCO and Trinity are needed only if you still have to produce the assemblies, the BUSCO runs, or the MarkerMiner alignments. This program reads those outputs.
-
-## Quick start
-
-From this directory:
-
-```bash
-python3 -m mmprefilter run --config example/config.json
-```
-
-Open `example/output/report.html`. The sliders start at the cutoffs in the config. Move them, then use **Download thresholds.json**. To filter with that choice instead of the numbers typed in the config, set `filter.thresholds_file` to the saved file and rerun:
-
-```bash
-python3 -m mmprefilter run --config example/config.json --from filter
-```
-
-`thresholds_file` replaces `filter.thresholds` when it is set. On a new dataset, leave both unset, run the pipeline, and choose the cutoffs from the report that was built for those alignments.
-
-The example config uses the cutoffs from the Boraginaceae screen:
-
-| Cutoff | Value |
-|---|---|
-| `n_exons` | > 0 |
-| `n_introns` | < 5 |
-| `max_exon_bp` | > 220 |
-| `max_intron_bp` | < 121 |
-| `avg_exon_bp` | > 152.51259 |
-| `avg_intron_bp` | < 102.46 |
-
-On the example alignments that keeps `AT1G01180` and `AT1G01280`, and drops `AT1G01880` (6 introns) and `VV00G01720` (8 introns, longest exon 131 bp). `DAT5_TRINITY_...` is renamed to `DAT5_echium_plantagineum_TRINITY_...`.
-
-To try other cutoffs, download a new `thresholds.json` from the report and point `filter.thresholds_file` at it. The metric tables are left in place.
-
-`--from` and `--to` choose which stages to execute. They are not analysis settings. Analysis settings are only in the config.
-
-## Running it on a full MarkerMiner output
-
-Copy `example/config.json`. Point `alignment_dir` entries at each `MAFFT_ADD_REF_ALIGN_FASTA` directory, and point the transcriptome, BUSCO, CDS, and GFF entries at your files. Set `enabled` to `false` for any stage you do not have inputs for. The reference CDS check and the GFF stage apply to the Arabidopsis-reference run. The alignment metrics and the filter apply to every run listed under `msa_metrics.runs`.
-
-`config.study.json` is the same cutoffs and the four runs from this project (Arabidopsis or Vitis reference, all isoforms or longest isoform), with the paths left for you to fill in. On the full alignments those cutoffs kept:
-
-| Run | Loci written |
-|---|---|
-| Arabidopsis, all isoforms | 606 |
-| Arabidopsis, longest isoform | 540 |
-| Vitis, all isoforms | 409 |
-| Vitis, longest isoform | 369 |
-
-A Vitis-to-Arabidopsis BLAST was used while choosing cutoffs and was not applied when those subsets were written. It is not part of this program.
-
 ## Config
 
 Paths in the config are relative to the config file unless they are absolute. Paths inside `transcriptome_list` are relative to that list file.
@@ -206,7 +214,7 @@ Paths in the config are relative to the config file unless they are absolute. Pa
 | `msa_metrics__<run>.csv` | One row per locus and ingroup sequence |
 | `gff_vs_msa.tsv` | Genomic lengths beside alignment-mask lengths |
 | `filtered/<run>/` | Alignments, `namelist.txt`, `filtered_rows.csv`, `summary.txt` |
-| `report.html` | Counts and histograms for the current cutoffs |
+| `report.html` | Slider page for the cutoffs, built from this run's metric tables |
 
 ## Example data
 
