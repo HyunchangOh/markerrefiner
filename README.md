@@ -6,23 +6,73 @@ MarkerMiner is not included. Run it first (Chamala et al., Applications in Plant
 
 Every path, cutoff, and header correction is set in a JSON config file. The program does not have a second set of hidden defaults for those choices.
 
-## What it does
+## Workflow
 
-Before MarkerMiner:
+The assemblies are already made. MarkerMiner has already been run. The question this program answers is which of those loci are worth opening in Geneious.
 
-1. **Transcriptome statistics.** Sequence count, Trinity gene count, total bases, N50, median, mean, and GC, from the assembly FASTA. This replaces the counts we used from `TrinityStats.pl` for the decision of whether an assembly was usable.
-2. **BUSCO summary.** Reads BUSCO `short_summary*.txt` files (transcriptome mode) and writes one table. It does not run BUSCO.
-3. **Longest isoform.** Keeps the longest sequence per Trinity gene (`TRINITY_DNx_c0_g1`). This is the same grouping as Trinity's `get_longest_isoform_seq_per_trinity_gene.pl`, so MarkerMiner can be run a second time on one transcript per gene.
+Two checks happen before MarkerMiner, so a poor assembly is not mistaken for a poor locus. The rest happens on the MarkerMiner alignments.
 
-After MarkerMiner:
+### 1. Transcriptome statistics
 
-4. **Reference CDS check.** Strips `N` runs from an intron-masked reference CDS and compares what remains to an external spliced CDS (TAIR10 representative CDS in this project). A match says which transcript the reference corresponds to.
-5. **GFF exon and intron lengths.** For that transcript, CDS blocks in a GFF give genomic exon lengths and the genomic gaps between them.
-6. **Exonic-column QC.** On columns where the alignment reference is `ACGT`, each ingroup sequence gets a gap fraction and an identity to the reference.
-7. **Alignment exon and intron lengths.** The last sequence in each MarkerMiner alignment is the reference. After gaps are removed, `ACGT` runs are exons and `N` runs are introns. For every other sequence, the length of a block is the number of those columns minus that sequence's gaps. This is the table the filter uses.
-8. **GFF versus alignment.** Coding length and longest intron from the GFF, next to the same numbers from the reference row. Where they differ, the alignment is what Geneious will show, so the filter follows the alignment.
-9. **Filter.** A row is kept only if it passes every cutoff in `filter.thresholds`. A blank cell does not fail the row. A locus is written if at least one ingroup row passes; only those rows, plus the reference, are kept. `DAT` codes in the headers are replaced with species names from the transcriptome filenames. `header_fixes` is applied after that (in this project, `echitum` to `echium`).
-10. **Report.** `report.txt` and `report.html`. The histograms mark the config cutoffs. They do not edit the cutoffs.
+- **Input.** Trinity assembly FASTA files.
+- **Role.** Count transcripts, Trinity genes, total bases, N50, median length, mean length, and GC. These are the figures used to decide that an assembly is intact enough to mine.
+- **Output.** `transcriptome_stats.tsv`, one row per assembly.
+
+### 2. BUSCO summary
+
+- **Input.** BUSCO `short_summary*.txt` files from transcriptome-mode runs.
+- **Role.** Put complete, single-copy, duplicated, fragmented, and missing scores in one table. A low complete score means the assembly is a bad starting point, before any locus is judged.
+- **Output.** `busco_summary.tsv`. BUSCO is not run here.
+
+### 3. Longest isoform
+
+- **Input.** The same Trinity FASTA files.
+- **Role.** Keep the longest sequence of each Trinity gene (`TRINITY_DNx_c0_g1`). MarkerMiner can then be run twice: once on every isoform, once on one sequence per gene. The grouping is the same as Trinity's `get_longest_isoform_seq_per_trinity_gene.pl`.
+- **Output.** `longest_isoform/*.fasta` and `summary.tsv`. This step prepares an input. It does not read MarkerMiner alignments.
+
+### 4. Reference CDS check
+
+- **Input.** MarkerMiner's intron-masked reference CDS, an external spliced CDS (TAIR10 representative models in this project), and the alignment filenames, which are the locus ids.
+- **Role.** Delete the `N` runs from the masked CDS and compare what remains with the spliced CDS. A match confirms that the reference really is that gene, and records the transcript id (`TAIR_tx`) whose exons should be read from the GFF.
+- **Output.** `reference_cds_check.tsv`, with `MATCH`, `MISMATCH`, or `MISSING` per locus.
+
+### 5. GFF exon and intron lengths
+
+- **Input.** A GFF3 file of `CDS` features, and the transcript id from step 4.
+- **Role.** Measure the gene as it is annotated on the genome: exon lengths are CDS block lengths, intron lengths are the genomic gaps between those blocks. This is the structure you would see on a genome browser, and it is independent of how the alignment was built.
+- **Output.** `gff_metrics.tsv`, one row per locus.
+
+### 6. Exonic-column QC
+
+- **Input.** Each `*.mafft.added.reference.align.fna` alignment. The reference is the last sequence.
+- **Role.** On columns where that reference is `ACGT`, measure how gappy each ingroup sequence is and how often it matches the reference. This asks whether the alignment is usable, separately from how many exons the gene has.
+- **Output.** `exon_qc__<run>.tsv`, one row per locus and ingroup sequence.
+
+### 7. Alignment exon and intron lengths
+
+- **Input.** The same alignments.
+- **Role.** Read structure from the reference row itself. Gaps are removed, then `ACGT` runs are exons and `N` runs are introns. For each ingroup sequence, the length of a block is the width of that run minus the gaps in that sequence. These are the lengths present in the file that will be opened in Geneious, so this is the table the filter uses.
+- **Output.** `msa_metrics__<run>.csv`, one row per locus and ingroup sequence: `n_exons`, `n_introns`, `max_exon_bp`, `max_intron_bp`, `avg_exon_bp`, `avg_intron_bp`.
+
+### 8. GFF versus alignment
+
+- **Input.** `gff_metrics.tsv` and the reference row of each alignment.
+- **Role.** Place genomic CDS length and genomic intron length next to the `ACGT` and `N` lengths from the alignment. Coding lengths should agree if step 4 matched. Intron lengths are a different measurement: the GFF gap is a genomic distance, the alignment intron is an `N` run. The filter follows the alignment.
+- **Output.** `gff_vs_msa.tsv`.
+
+### 9. Filter
+
+- **Input.** The step 7 tables, the original alignments, the transcriptome filenames, and the six cutoffs in `filter.thresholds`.
+- **Role.** Keep a row only when every cutoff holds. A blank cell does not fail the row. A locus is written when at least one ingroup row passes, and only those rows are kept, plus the reference. `DAT` codes in the headers become species names taken from the assembly filenames. `header_fixes` then corrects known spelling (`echitum` to `echium` in this project).
+- **Output.** `filtered/<run>/`, containing one alignment per kept locus, `namelist.txt`, `filtered_rows.csv`, and `summary.txt`.
+
+### 10. Report
+
+- **Input.** The metric tables and the cutoffs in the config.
+- **Role.** Show how many rows and loci pass, and draw the six distributions with the cutoff marked. Changing a cutoff means editing the config and rerunning from the filter. The page does not store a new cutoff.
+- **Output.** `report.txt` and `report.html`.
+
+Steps 4 and 5 need an external annotation, so they apply to an Arabidopsis-reference MarkerMiner run. Steps 6, 7, 9, and 10 apply to every run listed in the config, including a Vitis reference.
 
 ## Requirements
 
