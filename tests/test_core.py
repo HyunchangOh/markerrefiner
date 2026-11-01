@@ -1,8 +1,11 @@
 """Behaviour the filter depends on."""
 
+import json
 import os
 import tempfile
 import unittest
+
+from mmprefilter.config import ConfigError, resolve_thresholds
 
 from mmprefilter.qc import (
     annotate_seq_id,
@@ -29,6 +32,35 @@ THRESHOLDS = {
     "avg_exon_bp_gt": 100,
     "avg_intron_bp_lt": 50,
 }
+
+
+class ThresholdFileTests(unittest.TestCase):
+    def test_downloaded_file_replaces_inline_cutoffs(self):
+        chosen = {
+            "n_exons_gt": 1,
+            "n_introns_lt": 3,
+            "max_exon_bp_gt": 400,
+            "max_intron_bp_lt": 50,
+            "avg_exon_bp_gt": 200,
+            "avg_intron_bp_lt": 10,
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            path = os.path.join(tmp, "thresholds.json")
+            with open(path, "w") as handle:
+                json.dump(chosen, handle)
+            loaded = resolve_thresholds(
+                {"thresholds_file": path, "thresholds": {"n_exons_gt": 0}},
+                required=True,
+            )
+        self.assertEqual(loaded["max_exon_bp_gt"], 400)
+        self.assertEqual(loaded["n_introns_lt"], 3)
+
+    def test_missing_file_is_an_error(self):
+        with self.assertRaises(ConfigError):
+            resolve_thresholds(
+                {"thresholds_file": "/tmp/does-not-exist-mmprefilter.json"},
+                required=True,
+            )
 
 
 class StructureTests(unittest.TestCase):

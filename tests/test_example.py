@@ -36,7 +36,12 @@ class ExamplePipelineTests(unittest.TestCase):
                 text = handle.read()
             self.assertIn(">DAT5_echium_plantagineum_TRINITY_DN15068_c0_g1_i3", text)
             self.assertNotIn("echitum", text)
-            self.assertTrue(os.path.isfile(os.path.join(tmp, "report.html")))
+            report = os.path.join(tmp, "report.html")
+            with open(report) as handle:
+                page = handle.read()
+            self.assertIn("Download thresholds.json", page)
+            self.assertIn("AT1G01180", page)
+            self.assertIn("VV00G01720", page)
             comparison = read_table(os.path.join(tmp, "gff_vs_msa.tsv"))
             self.assertTrue(all(row["coding_bp_match"] == "yes" for row in comparison))
 

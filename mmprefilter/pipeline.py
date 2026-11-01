@@ -7,7 +7,7 @@ from .config import (
     ConfigError,
     enabled,
     require,
-    require_thresholds,
+    resolve_thresholds,
     section,
 )
 from .qc import (
@@ -214,37 +214,44 @@ def run_config(cfg, start=None, end=None):
 
     if "filter" in selected and enabled(cfg, "filter"):
         block = section(cfg, "filter")
-        thresholds = require_thresholds(block)
-        header_fixes = cfg.get("header_fixes") or []
-        if os.path.isfile(species_map_path):
-            species_by_code = read_species_map(species_map_path)
-        elif block.get("species_map"):
-            species_by_code = read_species_map(block["species_map"])
-        else:
-            species_by_code = {}
-        run_names = block.get("runs")
-        available = _runs(section(cfg, "msa_metrics"), "msa_metrics")
-        if run_names:
-            wanted = set(run_names)
-            available = [run for run in available if run["name"] in wanted]
-        for run in available:
-            table = os.path.join(output_dir, "msa_metrics__{0}.csv".format(run["name"]))
-            _must_file(table)
-            written, _kept = filter_run(
-                read_table(table),
-                run["alignment_dir"],
-                suffix,
-                os.path.join(output_dir, "filtered", run["name"]),
-                thresholds,
-                species_by_code,
-                header_fixes,
-            )
+        thresholds = resolve_thresholds(block, required=False)
+        if thresholds is None:
             print(
-                "{0}: wrote {1} alignments".format(run["name"], len(written))
+                "No cutoffs yet. report.html will let you choose them. "
+                "Download thresholds.json, set filter.thresholds_file, "
+                "and rerun from the filter stage."
             )
+        else:
+            header_fixes = cfg.get("header_fixes") or []
+            if os.path.isfile(species_map_path):
+                species_by_code = read_species_map(species_map_path)
+            elif block.get("species_map"):
+                species_by_code = read_species_map(block["species_map"])
+            else:
+                species_by_code = {}
+            run_names = block.get("runs")
+            available = _runs(section(cfg, "msa_metrics"), "msa_metrics")
+            if run_names:
+                wanted = set(run_names)
+                available = [run for run in available if run["name"] in wanted]
+            for run in available:
+                table = os.path.join(
+                    output_dir, "msa_metrics__{0}.csv".format(run["name"])
+                )
+                _must_file(table)
+                written, _kept = filter_run(
+                    read_table(table),
+                    run["alignment_dir"],
+                    suffix,
+                    os.path.join(output_dir, "filtered", run["name"]),
+                    thresholds,
+                    species_by_code,
+                    header_fixes,
+                )
+                print("{0}: wrote {1} alignments".format(run["name"], len(written)))
 
     if "report" in selected and enabled(cfg, "report"):
-        thresholds = require_thresholds(section(cfg, "filter"))
+        thresholds = resolve_thresholds(section(cfg, "filter"), required=False)
         run_rows = []
         for run in _runs(section(cfg, "msa_metrics"), "msa_metrics"):
             table = os.path.join(output_dir, "msa_metrics__{0}.csv".format(run["name"]))

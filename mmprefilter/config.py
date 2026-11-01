@@ -15,6 +15,7 @@ PATH_KEYS = {
     "gff",
     "transcript_map",
     "species_map",
+    "thresholds_file",
 }
 
 STAGES = [
@@ -100,13 +101,34 @@ def require(section_dict, key, label):
     return section_dict[key]
 
 
-def require_thresholds(filter_section):
-    thresholds = filter_section.get("thresholds")
+def _check_threshold_keys(thresholds, label):
     if not isinstance(thresholds, dict):
-        raise ConfigError("filter.thresholds must be an object.")
+        raise ConfigError("{0} must be a JSON object.".format(label))
     missing = [key for key in THRESHOLD_KEYS if key not in thresholds]
     if missing:
-        raise ConfigError(
-            "filter.thresholds is missing: {0}".format(", ".join(missing))
-        )
+        raise ConfigError("{0} is missing: {1}".format(label, ", ".join(missing)))
     return thresholds
+
+
+def resolve_thresholds(filter_section, required):
+    """Cutoffs come from thresholds_file when it is set, otherwise from thresholds.
+
+    The file is the JSON downloaded from report.html. A filter run needs one
+    of the two. The report can be built before either exists.
+    """
+    path = filter_section.get("thresholds_file") or ""
+    if path:
+        if not os.path.isfile(path):
+            raise ConfigError("filter.thresholds_file not found: {0}".format(path))
+        with open(path) as handle:
+            loaded = json.load(handle)
+        return _check_threshold_keys(loaded, "filter.thresholds_file")
+    inline = filter_section.get("thresholds")
+    if isinstance(inline, dict):
+        return _check_threshold_keys(inline, "filter.thresholds")
+    if required:
+        raise ConfigError(
+            "No cutoffs yet. Open report.html, move the sliders, download "
+            "thresholds.json, and set filter.thresholds_file to that file."
+        )
+    return None

@@ -109,8 +109,8 @@ The first three stages look at the assemblies, before MarkerMiner. A broken asse
 - **Input.** The metric tables and the cutoffs in the config.
 - **Role.** Count rows and loci that pass, and draw the six distributions with the cutoff marked.
 - **Red flags.** Almost every locus passes, so the screen is not removing the structures you meant to avoid. Or almost nothing passes, so the cutoffs are tighter than the genes you have.
-- **Okay to continue.** The kept set is small enough to curate and still contains the loci you want. Editing a cutoff means changing `filter.thresholds` and rerunning from stage 9. The page does not store a new cutoff.
-- **Output.** `report.txt` and `report.html`.
+- **Okay to continue.** The kept set is small enough to curate and still contains the loci you want. Download `thresholds.json` from the page, set `filter.thresholds_file` to that path, and rerun from stage 9. The filter reads that file. You do not copy the six numbers by hand.
+- **Output.** `report.txt` and `report.html`. The page is built from the metric tables of this run, so another person's alignments get their own sliders.
 
 Steps 4 and 5 need an external annotation, so they apply to an Arabidopsis-reference MarkerMiner run. Steps 6, 7, 9, and 10 apply to every run listed in the config, including a Vitis reference.
 
@@ -128,7 +128,13 @@ From this directory:
 python3 -m mmprefilter run --config example/config.json
 ```
 
-Open `example/output/report.html`.
+Open `example/output/report.html`. The sliders start at the cutoffs in the config. Move them, then use **Download thresholds.json**. To filter with that choice instead of the numbers typed in the config, set `filter.thresholds_file` to the saved file and rerun:
+
+```bash
+python3 -m mmprefilter run --config example/config.json --from filter
+```
+
+`thresholds_file` replaces `filter.thresholds` when it is set. On a new dataset, leave both unset, run the pipeline, and choose the cutoffs from the report that was built for those alignments.
 
 The example config uses the cutoffs from the Boraginaceae screen:
 
@@ -143,11 +149,7 @@ The example config uses the cutoffs from the Boraginaceae screen:
 
 On the example alignments that keeps `AT1G01180` and `AT1G01280`, and drops `AT1G01880` (6 introns) and `VV00G01720` (8 introns, longest exon 131 bp). `DAT5_TRINITY_...` is renamed to `DAT5_echium_plantagineum_TRINITY_...`.
 
-To try other cutoffs, edit `filter.thresholds` and rerun from the filter onward. The metric tables are left in place:
-
-```bash
-python3 -m mmprefilter run --config example/config.json --from filter
-```
+To try other cutoffs, download a new `thresholds.json` from the report and point `filter.thresholds_file` at it. The metric tables are left in place.
 
 `--from` and `--to` choose which stages to execute. They are not analysis settings. Analysis settings are only in the config.
 
@@ -184,8 +186,9 @@ Paths in the config are relative to the config file unless they are absolute. Pa
 | `gff_metrics` | GFF3 with `CDS` features. Transcript ids come from the CDS check (`MATCH` rows) unless `transcript_map` is set |
 | `exon_qc.runs` / `msa_metrics.runs` | Each entry has `name` and `alignment_dir` |
 | `filter.runs` | Which metric tables to filter. Omit it to filter every `msa_metrics` run |
-| `filter.thresholds` | The six cutoffs. All six keys are required |
-| `report.enabled` | Write `report.txt` and `report.html` |
+| `filter.thresholds` | The six cutoffs, written in the config. Used when `thresholds_file` is not set |
+| `filter.thresholds_file` | Path to a `thresholds.json` downloaded from `report.html`. When set, this file is the cutoffs |
+| `report.enabled` | Write `report.txt` and the slider page `report.html` from the metric tables of this run |
 
 `filter.thresholds` uses a strict inequality (`>` or `<`, not `>=`). A blank `max_intron_bp` or `avg_intron_bp`, as on a single-exon gene, is ignored for that cutoff. `n_introns` of `0` is a real value and is tested.
 
